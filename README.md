@@ -1,4 +1,4 @@
-<h1 align="center" color"saddlebrown">brown</h1>
+<h1 align="center" color="saddlebrown">brown</h1>
 <h2 align="center">The Uncompromising <i>SQL</i> Formatter</h2>
 
 <p align="center">
