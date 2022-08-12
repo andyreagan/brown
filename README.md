@@ -1,5 +1,7 @@
-<h1 align="center" color="saddlebrown">brown</h1>
-<h2 align="center">The Uncompromising <i>SQL</i> Formatter</h2>
+<summary>
+  <h1 align="center" color="saddlebrown">brown</h1>
+  <h2 align="center">The Uncompromising <i>SQL</i> Formatter</h2>
+</summary>
 
 <p align="center">
 <a href="blob/main/.github/workflows/pre-commit.yml"><img alt="Style Check Status" src="https://github.com/andyreagan/brown/actions/workflows/.github/workflows/pre-commit.yml/badge.svg"></a>
