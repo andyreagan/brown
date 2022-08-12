@@ -53,9 +53,7 @@ ORDERED_GROUPS = (
 )
 
 
-def process_from(
-    x: str, current_line_length: int, max_line_length: int, indent: str
-) -> str:
+def process_from(x: str, current_line_length: int, max_line_length: int, indent: str) -> str:
     # we don't really need to split it like this
     # since we just stick it back together
     # split_table_name = x.strip().split(' ')
@@ -83,9 +81,7 @@ def process_where(x: str, current_line_len: int, max_line_len: int, indent: str)
         return "\n" + f"\n{indent}AND ".join(clauses) + "\n"
 
 
-def scan_to_close(
-    remaining_text: str, open_char: str = "(", close_char: str = ")"
-) -> str:
+def scan_to_close(remaining_text: str, open_char: str = "(", close_char: str = ")") -> str:
     needed_to_close: int = 1
     i: int = 0
     while needed_to_close > 0 and i < len(remaining_text):
@@ -132,16 +128,12 @@ def test_detect_substatement_type() -> None:
     detect_substatement_type("z == 10 and y = 5") == "generic"
 
 
-def indent_case_statement(
-    stmt: str, cur_ind: str, ind: str, max_ll, debug=debug
-) -> str:
+def indent_case_statement(stmt: str, cur_ind: str, ind: str, max_ll, debug: bool = False) -> str:
     for keyword in {"CASE", "WHEN", "THEN", "ELSE", "END", "AS", "NULL", "IN"}:
         stmt = stmt.replace(" " + keyword.lower() + " ", " " + keyword + " ")
 
     # first, get out to the end
-    match = re.match(
-        "CASE(?P<body>.*?) END (?P<end>.*)", stmt, re.IGNORECASE
-    ).groupdict()
+    match = re.match("CASE(?P<body>.*?) END (?P<end>.*)", stmt, re.IGNORECASE).groupdict()
     if debug:
         print(match)
     # if there is an else, get that
@@ -215,8 +207,8 @@ def test_indent_case_statement() -> None:
     )
 
 
-def parse(
-    text: str, line_length=100, debug=debug, indent=" " * 4, starting_indent: str = ""
+def parse(  # noqa: C901
+    text: str, line_length=100, debug: bool = False, indent=" " * 4, starting_indent: str = ""
 ) -> str:
     # select_block = re.search('$|\n|\s+SELECT\n|\s+', 'SELECT ')
     # join_block = None
@@ -278,9 +270,7 @@ def parse(
             if (exit := buffer.upper()[-4:]) in select_exits:
                 if buffer[:-4].strip().lower()[:4] == "case":
                     expressions.append(
-                        indent_case_statement(
-                            buffer[:-4].strip(), indent, indent, line_length
-                        )
+                        indent_case_statement(buffer[:-4].strip(), indent, indent, line_length)
                     )
                 else:
                     expressions.append(buffer[:-4].strip())
@@ -291,9 +281,7 @@ def parse(
                         # this puts the first expression on the SELECT line
                         # formatted += ' ' + f',\n{indent}'.join(expressions) + '\n'
                         # this starts it on a new line:
-                        formatted += (
-                            f"\n{indent}" + f",\n{indent}".join(expressions) + "\n"
-                        )
+                        formatted += f"\n{indent}" + f",\n{indent}".join(expressions) + "\n"
                     formatted += exit
                     current_ll, current_clause, buffer = len(exit), exit.lower(), ""
                 elif exit == "INTO":
@@ -306,10 +294,7 @@ def parse(
                 formatted += process_from(buffer, current_ll, line_length, indent)
             else:
                 for exit in exits:
-                    if (
-                        len(buffer) >= len(exit)
-                        and buffer[-len(exit) :].upper() == exit
-                    ):
+                    if len(buffer) >= len(exit) and buffer[-len(exit) :].upper() == exit:
                         formatted += process_from(
                             buffer[: -len(exit)], current_ll, line_length, indent
                         )
@@ -322,13 +307,8 @@ def parse(
                 formatted += process_where(buffer, current_ll, line_length, indent)
             else:
                 for exit in exits:
-                    if (
-                        len(buffer) >= len(exit)
-                        and buffer[-len(exit) :].upper() == exit
-                    ):
-                        formatted += process_where(
-                            buffer[: -len(exit)], current_ll, line_length
-                        )
+                    if len(buffer) >= len(exit) and buffer[-len(exit) :].upper() == exit:
+                        formatted += process_where(buffer[: -len(exit)], current_ll, line_length)
                         formatted += exit
                         current_ll, current_clause, buffer = len(exit), exit.lower(), ""
         if (x := buffer.upper()) == "SELECT":

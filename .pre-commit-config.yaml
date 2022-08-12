@@ -1,0 +1,61 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: fix-byte-order-marker
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+
+  # # Lint Python and Pass/Fail
+  # - repo: https://github.com/pycqa/pydocstyle
+  #   rev: 4.0.1
+  #   hooks:
+  #     - id: pydocstyle
+
+  - repo: https://github.com/python/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v0.942
+  #   hooks:
+  #     - id: mypy
+  #       # args: [--no-strict-optional, --ignore-missing-imports]
+  #       # exclude: ^docs/conf.py
+  #       # additional_dependencies:
+  #       #   - types-dataclasses >= 0.1.3
+  #       #   - types-PyYAML
+  #       #   - tomli >= 0.2.6, < 2.0.0
+  #       #   - types-typed-ast >= 1.4.1
+  #       #   - click >= 8.1.0
+  #       #   - platformdirs >= 2.1.0
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        # args: ["-d {extends: relaxed, rules: {line-length: {max: 120}}}"]
+        args: ["-c", ".yamllint.cfg"]
+        # verbose: true
+        # entry: bash -c 'yamllint "$@" || true' --
+
+  - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
+    rev: v0.1.0
+    hooks:
+      - id: dockerfilelint
+...

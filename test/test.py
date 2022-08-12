@@ -2,11 +2,11 @@ import re
 import unittest
 
 from .brown import (
-    scan_to_close,
     detect_substatement_type,
     indent_case_statement,
     indent_case_statement_iterative,
     parse,
+    scan_to_close,
 )
 
 
@@ -16,12 +16,8 @@ def test_scan_to_close(**kwargs) -> None:
     assert scan_to_close("a}}", close_char="}}", **kwargs) == "a"
     assert scan_to_close("(a))", **kwargs) == "(a)"
     assert scan_to_close("{{a}} }}", close_char="}}", **kwargs) == "{{a"
-    assert (
-        scan_to_close("{{a}} }}", close_char="}}", open_char="{{", **kwargs) == "{{a}} "
-    )
-    assert (
-        scan_to_close("{{a}}}}", close_char="}}", open_char="{{", **kwargs) == "{{a}}"
-    )
+    assert scan_to_close("{{a}} }}", close_char="}}", open_char="{{", **kwargs) == "{{a}} "
+    assert scan_to_close("{{a}}}}", close_char="}}", open_char="{{", **kwargs) == "{{a}}"
 
     unittest.TestCase().assertRaises(RuntimeError, scan_to_close, "(a)")
     assert scan_to_close("(z(x(a)1)2)3)", **kwargs) == "(z(x(a)1)2)3"
@@ -105,7 +101,6 @@ def test_indent_case_statement(**kwargs) -> None:
     buffer = "\nCASE\nWHEN PROD_GROUP = 'retail' THEN\n-- for CM val files [2=MPR, 17=Datalife (CM2000 AND SWL)] use last 2 digits to make suffix\n-- otherwise there should be no suffix\n-- what about CM migrations to coverpath (sanderling)?\n-- second piece here gets those: source=22 is haven\n-- a _single_ policy needs this to not have a duplicate\nCASE\nWHEN\n((VAL_FILE_IND IN (2, 17)) OR ((VAL_FILE_IND = 22) AND (mm_cm = 'CM'))) AND (RIGHT(PK_POL_NO::VARCHAR, 2)::INT BETWEEN 1 AND 13)\nTHEN CHR(64 + RIGHT(PK_POL_NO::VARCHAR, 2)::int) -- A thru M\nELSE PK_AGMT_SFX\nEND\n-- WHEN prod_typ_groups.PROD_GROUP IN ('eb', 'worksite') THEN\n-- CASE WHEN pk_agmt_sfx = '0' THEN 'N'\n-- ELSE pk_agmt_sfx END\n-- use the one that's nulled:\nELSE PK_AGMT_SFX\nEND AS PK_AGMT_SFX_FIX,"
 
     indent_case_statement(buffer[:-1].strip(), " " * 4, " " * 4, 20, **kwargs)
-
 
 
 def test_indent_case_statement_iterative(**kwargs) -> None:
@@ -355,6 +350,7 @@ FROM my_table q
 WHERE h AND k > 10
 """
     test_parse_wrapper(raw, expected, line_length=20, **kwargs)
+
 
 #     raw = """SELECT *,
 #     CASE

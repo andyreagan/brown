@@ -53,9 +53,7 @@ ORDERED_GROUPS = (
 )
 
 
-def process_from(
-    x: str, current_line_length: int, max_line_length: int, indent: str
-) -> str:
+def process_from(x: str, current_line_length: int, max_line_length: int, indent: str) -> str:
     if re.match(".*?[^\n]+--.*?$", x, re.DOTALL) is not None:
         # test buffer:
         #         buffer = '''stuff
@@ -80,16 +78,10 @@ def process_from(
     # together = table_name + alias
     together = x.strip()
     if len(together) + 1 + current_line_length <= max_line_length:
-        return (
-            " " + together + format_trailing_comment(expression_trailing_comment) + "\n"
-        )
+        return " " + together + format_trailing_comment(expression_trailing_comment) + "\n"
     else:
         return (
-            "\n"
-            + indent
-            + together
-            + format_trailing_comment(expression_trailing_comment)
-            + "\n"
+            "\n" + indent + together + format_trailing_comment(expression_trailing_comment) + "\n"
         )
 
 
@@ -145,7 +137,7 @@ def detect_substatement_type(substatement: str) -> str:
         return "generic"
 
 
-def indent_case_statement(
+def indent_case_statement(  # noqa: C901
     stmt: str, cur_ind: str, ind: str, max_ll: int, debug: bool = False
 ) -> str:
     for keyword in {"CASE", "WHEN", "THEN", "ELSE", "END", "AS", "NULL", "IN"}:
@@ -170,12 +162,10 @@ def indent_case_statement(
         # get a leading comment
         leading_comment_lines = 0
         for line in stmts[i][1].split("\n"):
-            if re.match("^\s*--", line) is not None:
+            if re.match(r"^\s*--", line) is not None:
                 leading_comment_lines += 1
         if leading_comment_lines > 0:
-            split_stmts += [
-                ["", x] for x in stmts[i][1].split("\n")[:leading_comment_lines]
-            ] + [
+            split_stmts += [["", x] for x in stmts[i][1].split("\n")[:leading_comment_lines]] + [
                 [
                     stmts[i][0],
                     "\n".join(stmts[i][1].split("\n")[leading_comment_lines:]),
@@ -187,7 +177,10 @@ def indent_case_statement(
         print(f"{stmt=} {match=} {body=} {elsestmt=} {stmts=} {split_stmts=}")
     breaking_comments = re.search("\n[ \t]*--", stmt) is not None
     breaking_comments = len(split_stmts) > len(stmts)
-    flatten = lambda x: x.replace("\n", " ")
+
+    def flatten(x: str) -> str:
+        return x.replace("\n", " ")
+
     if (
         len(cur_ind)
         + 5
@@ -226,7 +219,7 @@ def process_else(stmt: str, cur_ind: str, ind: str, max_ll: int, debug: bool = F
     return formatted
 
 
-def indent_case_statement_iterative(
+def indent_case_statement_iterative(  # noqa: C901
     stmt: str, cur_ind: str, ind: str, max_ll: int, debug: bool = False
 ) -> str:
     """The previous version of indent_case_statement used split() to break
@@ -240,8 +233,8 @@ def indent_case_statement_iterative(
     # {"clause": "ELSE ", "condition": None, "result": "NULL", "comments": []}
     # {"clause": None, "condition": None, "result": None, "comments": ["comment1", "comment2"]}
 
-    group_trailing_comment = None  # will fill with starting comment, if there is one
-    group_ending_clause = None  # e.g., "AS q"
+    # group_trailing_comment = None  # will fill with starting comment, if there is one
+    # group_ending_clause = None  # e.g., "AS q"
     all_clauses = []
 
     # we can check out of the gate whether or not we can combine the whole thing
@@ -261,7 +254,7 @@ def indent_case_statement_iterative(
 
     i = 4
     assert stmt[:i].upper() == "CASE"
-    formatted = "CASE "
+    # formatted = "CASE "
     buffer = ""
     current_clause = {}
     while i < len(stmt):
@@ -269,9 +262,7 @@ def indent_case_statement_iterative(
         if debug:
             print(f"{i=} {buffer=} {current_clause=}")
         if stmt[i : i + 2] == "--":
-            comment = scan_to_close(
-                stmt[i + 2 :], open_char="\n\n", close_char="\n", debug=debug
-            )
+            comment = scan_to_close(stmt[i + 2 :], open_char="\n\n", close_char="\n", debug=debug)
             if debug:
                 print(f"found a comment - scanned to close it: {comment=}")
 
@@ -292,11 +283,11 @@ def indent_case_statement_iterative(
                 # current_clause["comments"].append(comment.strip())
                 # add it to the buffer
                 i += len(comment) + 2
-                buffer += '-'  + comment
+                buffer += "-" + comment
             if debug:
                 print(f"updated {buffer=} and position {i=}, {stmt[i]=}")
         if stmt[i : i + 4].upper() == "WHEN":
-            if current_clause.get('clause') is not None:
+            if current_clause.get("clause") is not None:
                 current_clause["result"] = buffer[:-1].strip()
                 all_clauses.append(current_clause)
             current_clause = {
@@ -325,15 +316,13 @@ def indent_case_statement_iterative(
         if stmt[i : i + 3].upper() == "END":
             current_clause["result"] = buffer[:-1].strip()
             all_clauses.append(current_clause)
-            group_ending_clause = stmt[i + 3 :]
+            # group_ending_clause = stmt[i + 3 :]
             break
         i += 1
     return all_clauses
 
 
-def process_expression(
-    buffer: str, remaining: str, indent: str, line_length: int, **kwargs
-):
+def process_expression(buffer: str, remaining: str, indent: str, line_length: int, **kwargs):
     """This function accepts an expression
     (without trailing ,)
     but otherwise unmodified,
@@ -365,16 +354,11 @@ def process_expression(
     else:
         expression_trailing_comment = None
     if buffer[:4].upper() == "CASE":
-        indented_statement = indent_case_statement(
-            buffer, indent, indent, line_length, **kwargs
-        )
+        indented_statement = indent_case_statement(buffer, indent, indent, line_length, **kwargs)
     else:
         indented_statement = re.sub(r"\s+", " ", buffer)
 
-    if (
-        expression_trailing_comment is not None
-        and lookahead_trailing_comment is not None
-    ):
+    if expression_trailing_comment is not None and lookahead_trailing_comment is not None:
         raise RuntimeError("Found double comments on expression - shouldnt happen")
 
     comment = lookahead_trailing_comment
@@ -400,8 +384,10 @@ def process_stmt(x: dict, indent: str) -> str:
         return f"{indent}-- {x['comment'].strip()}"
 
 
-def process_select(body: str, line_length: int, debug: bool, indent: str, group_trailing_comment) -> str:
-    current_ll = len('SELECT')  # 6
+def process_select(  # noqa: C901
+    body: str, line_length: int, debug: bool, indent: str, group_trailing_comment
+) -> str:
+    current_ll = len("SELECT")  # 6
     formatted = ""
     group_expressions = []
     group_inline_comments = False
@@ -451,15 +437,14 @@ def process_select(body: str, line_length: int, debug: bool, indent: str, group_
         # assert re.search(within_expr_comment_comma_pattern, '\nstuff--comment,\nstuff-- comment,comment,') is not None
         # assert re.search(within_expr_comment_comma_pattern, '\nstuff--comment,\nstuff,') is None
         # assert re.search(within_expr_comment_comma_pattern, '\nstuff,') is None
-        if (
-            ((body[i] == ",") or (i == (len(body) - 1)))
-            and re.search(within_expr_comment_comma_pattern, buffer) is None
-        ):
+        if ((body[i] == ",") or (i == (len(body) - 1))) and re.search(
+            within_expr_comment_comma_pattern, buffer
+        ) is None:
             if body[i] == ",":
                 buffer = buffer[:-1]
                 remaining = body[i + 1 :]
             else:
-                remaining = ''
+                remaining = ""
             if debug:
                 print(f"found an expression: {buffer=}")
             group_expressions.append(
@@ -478,52 +463,28 @@ def process_select(body: str, line_length: int, debug: bool, indent: str, group_
                 match = re.match("[ \t]*--.*?\n", remaining)
                 i += len(match.group())
                 if debug:
-                    print(
-                        f"jumped past trailing comment, new current char is {body[i]}"
-                    )
+                    print(f"jumped past trailing comment, new current char is {body[i]}")
             buffer = ""
         i += 1
 
-    expressions_have_newlines = any(
-        ["\n" in x.get("stmt", "") for x in group_expressions]
-    )
-    combined_trailing_comments = format_trailing_comment(
-        group_trailing_comment
-    ) + "".join(
-        [
-            format_trailing_comment(x.get("comment"))
-            for x in group_expressions
-        ]
+    expressions_have_newlines = any(["\n" in x.get("stmt", "") for x in group_expressions])
+    combined_trailing_comments = format_trailing_comment(group_trailing_comment) + "".join(
+        [format_trailing_comment(x.get("comment")) for x in group_expressions]
     )
     flat_stmts = ", ".join([x["stmt"] for x in group_expressions])
-    combined_flat_length = (
-        current_ll
-        + 1
-        + len(flat_stmts)
-        + len(combined_trailing_comments)
-    )
+    combined_flat_length = current_ll + 1 + len(flat_stmts) + len(combined_trailing_comments)
     if (
         not group_inline_comments
         and not expressions_have_newlines
         and (combined_flat_length <= line_length)
     ):
-        formatted += (
-            " " + flat_stmts + combined_trailing_comments + "\n"
-        )
+        formatted += " " + flat_stmts + combined_trailing_comments + "\n"
     else:
         # this puts the first expression on the SELECT line
         # formatted += ' ' + f',\n{indent}'.join(group_expressions) + '\n'
         # this starts it on a new line:
         if len(group_expressions) > 1:
-            middle = (
-                "\n".join(
-                    [
-                        process_stmt(x, indent)
-                        for x in group_expressions[:-1]
-                    ]
-                )
-                + "\n"
-            )
+            middle = "\n".join([process_stmt(x, indent) for x in group_expressions[:-1]]) + "\n"
         else:
             middle = ""
         formatted += (
@@ -536,7 +497,7 @@ def process_select(body: str, line_length: int, debug: bool, indent: str, group_
     return formatted
 
 
-def parse(
+def parse(  # noqa: C901
     text: str,
     line_length=100,
     debug: bool = True,
@@ -580,14 +541,14 @@ def parse(
     # The reading buffer for scanning
     buffer = ""
     # Scanning status
-    group_expressions = []
+    # group_expressions = []
     # Three special variables to keep track of things.
     # We'll put these to trailing if we collapse the whole group
     # (otherwise they stay)
     group_trailing_comment = None
     # These limit our ability to collapse the group:
     # we won't collapse if we have comments that break up the group.
-    group_inline_comments = False
+    # group_inline_comments = False
     # Another special place for a comment is on a new line,
     # after a group's expressions.
     end_group_comment = None
@@ -627,10 +588,10 @@ def parse(
             if debug:
                 print(f"found a comment - scanned to close it: {comment=}")
             if current_clause is None:
-                formatted += '-- ' + comment.strip() + '\n'
+                formatted += "-- " + comment.strip() + "\n"
                 buffer = ""
             else:
-                buffer += '- ' + comment.strip() + '\n'
+                buffer += "- " + comment.strip() + "\n"
             i += len(comment) + 2
             if debug:
                 print(f"updated {buffer=} and position {i=}, {sanitized[i]=}")
@@ -658,11 +619,15 @@ def parse(
                         # remove that from the buffer
                         buffer = "\n".join(buffer.split("\n")[:-2]) + " " * 5
                         if debug:
-                            print(
-                                f"previous line was a pure comment, removing it...new {buffer=}"
-                            )
+                            print(f"previous line was a pure comment, removing it...new {buffer=}")
 
-                formatted_select_body = process_select(buffer[:-5], line_length=line_length, debug=debug, indent=indent, group_trailing_comment=group_trailing_comment)
+                formatted_select_body = process_select(
+                    buffer[:-5],
+                    line_length=line_length,
+                    debug=debug,
+                    indent=indent,
+                    group_trailing_comment=group_trailing_comment,
+                )
 
                 formatted += formatted_select_body
 
@@ -671,7 +636,8 @@ def parse(
                 # now exit
                 if end_group_comment is not None:
                     formatted += "-- " + end_group_comment.strip() + "\n"
-                group_trailing_comment, end_group_comment, group_inline_comments = (
+                # group_inline_comments
+                group_trailing_comment, end_group_comment = (
                     None,
                     None,
                     False,
@@ -682,14 +648,11 @@ def parse(
             join_starts = {"NATURAL", "INNER", "LEFT", "RIGHT", "FULL", "CROSS", "JOIN"}
             exits = join_starts | set(ORDERED_GROUPS[4:])
             if i == (len(sanitized) - 1):
-                formatted += 'FROM' + process_from(buffer, current_ll, line_length, indent)
+                formatted += "FROM" + process_from(buffer, current_ll, line_length, indent)
             else:
                 for exit in exits:
-                    if (
-                        len(buffer) >= len(exit)
-                        and buffer[-len(exit) :].upper() == exit
-                    ):
-                        formatted += 'FROM' + process_from(
+                    if len(buffer) >= len(exit) and buffer[-len(exit) :].upper() == exit:
+                        formatted += "FROM" + process_from(
                             buffer[: -len(exit)], current_ll, line_length, indent
                         )
                         formatted += exit
@@ -701,13 +664,8 @@ def parse(
                 formatted += process_where(buffer, current_ll, line_length, indent)
             else:
                 for exit in exits:
-                    if (
-                        len(buffer) >= len(exit)
-                        and buffer[-len(exit) :].upper() == exit
-                    ):
-                        formatted += process_where(
-                            buffer[: -len(exit)], current_ll, line_length
-                        )
+                    if len(buffer) >= len(exit) and buffer[-len(exit) :].upper() == exit:
+                        formatted += process_where(buffer[: -len(exit)], current_ll, line_length)
                         formatted += exit
                         current_ll, current_clause, buffer = len(exit), exit.upper(), ""
 
